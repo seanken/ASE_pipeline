@@ -2,10 +2,9 @@
 
 //As written runs for one sample at a time, will modify in later versions
 //Requirements:
-//1) R with dplyr and tidyr
+//1) Conda
 //2) Java
-//3) STAR on path (will fix this later)
-//4) bedtools
+
 
 //Input files Required input
 params.input_vcf //vcf used

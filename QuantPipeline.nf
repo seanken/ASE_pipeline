@@ -60,10 +60,10 @@ env fastqs into fastq_ch
 
 
 '''
-toSearch=$(echo $directs | sed 's/,/*_2*gz /g'| sed 's/$/*_2*gz/g')
+toSearch=$(echo $directs | sed 's/,/\/*_L00*_R2*fastq.gz /g'| sed 's/$/\/*_L00*_R2*fastq.gz/g')
 fastq1=$(ls -m \$toSearch | tr -d '[:space:]')
 
-toSearch=$(echo $directs | sed 's/,/*_1*gz /g'| sed 's/$/*_1*gz/g')
+toSearch=$(echo $directs | sed 's/,/\/*_L00*_R1*fastq.gz /g'| sed 's/$/\/*_L00*_R1*fastq.gz/g')
 fastq2=$(ls -m \$toSearch | tr -d '[:space:]')
 
 fastqs=$(echo \$fastq1 \$fastq2)

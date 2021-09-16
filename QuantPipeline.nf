@@ -9,7 +9,7 @@
 
 //Input files Required input
 params.input_vcf //vcf used
-params.vcf_col // column number in the vcf to use (might modify to make easier to use)
+params.vcf_col // sample name in the vcf to use
 params.input_dirs //comma seperated list of directories containing 10X fastqs, will use all fastqs in those directories
 params.outdir //directory to output results to
 
@@ -18,15 +18,14 @@ params.outdir //directory to output results to
 params.numCells=3000 //number of cells expected
 
 //Files used in process and other params
-params.numThreads=1
+params.numThreads=8
 params.ref="$projectDir/ref/STAR_nuc_ref" //STAR reference to use--for now just human built in, though users can pass their own
-params.num10X_version="v2" //version of 10X, allows you to pick the correct list
+params.num10X_version="v3" //version of 10X, allows you to pick the correct list
 params.whitelist="$projectDir/ref/whitelist_${params.num10X_version}/whitelist.txt" //10X whitelist
 params.use_conda=0 //decide if want to download dependencies with conda. If not must be on path
 params.gtf="$projectDir/ref/genes.gtf" //gtf used, include standard one but allow user to overright, should match STAR reference
 params.MakeSNPScript="$projectDir/scripts/Make.SNPs.R" //R script used for making SNP counts, probably don't want user to change in most situations
 params.AlleleCountJar="$projectDir/scripts/AlleleCount_WASP.jar"
-params.makeVCF="$projectDir/scripts/makeVCF.sh"
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 
 //this step processes the VCF into the form you need it (assumes already phased)
@@ -36,17 +35,18 @@ process PrepVCF
 input:
 env vcf_col from params.vcf_col
 path input_vcf, stageAs:"input.vcf.gz" from params.input_vcf
-path makeVCF, stageAs:"makeVCF.sh" from params.makeVCF
 
 output:
 path "new.vcf" into new_vcf_ch
 
 
+
+conda 'bcftools'
+
 '''
-source makeVCF.sh input.vcf.gz $vcf_col new.vcf
+bcftools view -H -O v -s $vcf_col input.vcf.gz | grep -v 0\|0 | grep -v 1\|1 > new.vcf
 '''
 
-//zcat input.vcf.gz | grep -v \#  | awk -v col=!vcf_col '{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$col}' | grep -v 0\|0 | grep -v 1\|1 > new.vcf
 }
 
 //Gets path to Fastqs
@@ -151,7 +151,7 @@ conda 'bedtools=2.30.0 r-tidyr=1.1.3'
 
 
 '''
-source makeBeds.sh genes.gtf new.vc f
+source makeBeds.sh genes.gtf new.vcf
 bedtools intersect -a snps.bed -b gene.bed -wa -wb | awk '{print $4"\t"$9"\t"$5}' | sort | uniq > comb.bed
 Rscript Make.SNPs.R comb.bed counts.txt SNP.counts.txt
 '''

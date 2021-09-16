@@ -24,7 +24,8 @@ params.whitelist="$projectDir/ref/whitelist_${params.num10X_version}/whitelist.t
 params.use_conda=0 //decide if want to download dependencies with conda. If not must be on path
 params.gtf="$projectDir/ref/genes.gtf" //gtf used, include standard one but allow user to overright, should match STAR reference
 params.MakeSNPScript="$projectDir/scripts/Make.SNPs.R" //R script used for making SNP counts, probably don't want user to change in most situations
-params.AlleleCountJar="$projectDir/scripts/AlleleCount_WASP.jar"
+//params.AlleleCountJar="$projectDir/scripts/AlleleCount_WASP.jar"
+params.UMILen=12
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 
 //this step processes the VCF into the form you need it (assumes already phased)
@@ -85,6 +86,7 @@ env ref from params.ref
 env fastqs from fastq_ch
 path whitelist, stageAs: "whitelist.txt" from params.whitelist
 env numThreads from params.numThreads
+env UMILen from params.UMILen
 
 output:
 path "output" into STAR_Dir
@@ -96,7 +98,7 @@ conda 'star=2.7.9a'
 
 '''
 mkdir output
-STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen 10 --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag
+STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag
 '''
 
 }
@@ -111,7 +113,7 @@ publishDir "${params.outdir}/AlleleCounts"
 input:
 path output, stageAs:"output" from STAR_Dir
 path vcf, stageAs:"new.vcf" from new_vcf_ch 
-path AlleleCountJar, stageAs:"AlleleCount.jar" from params.AlleleCountJar
+//path AlleleCountJar, stageAs:"AlleleCount.jar" from params.AlleleCountJar
 
 output:
 path "counts.txt" into gene_counts_ch

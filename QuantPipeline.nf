@@ -44,8 +44,11 @@ path "new.vcf" into new_vcf_ch
 conda 'bcftools'
 
 '''
-bcftools view -H -O v -s $vcf_col input.vcf.gz | grep -v 0\|0 | grep -v 1\|1 > new.vcf
+bcftools view -H -O v -s $vcf_col input.vcf.gz | grep -v "0|0" | grep -v "1|1" > new.vcf
 '''
+
+
+//bcftools view -H -O v -s $vcf_col input.vcf.gz > new.vcf
 
 }
 
@@ -60,10 +63,10 @@ env fastqs into fastq_ch
 
 
 '''
-toSearch=$(echo $directs | sed 's/,/\/*_L00*_R2*fastq.gz /g'| sed 's/$/\/*_L00*_R2*fastq.gz/g')
+toSearch=$(echo $directs | sed 's/,/*_L00*_R2*fastq.gz /g'| sed 's/$/*_L00*_R2*fastq.gz/g')
 fastq1=$(ls -m \$toSearch | tr -d '[:space:]')
 
-toSearch=$(echo $directs | sed 's/,/\/*_L00*_R1*fastq.gz /g'| sed 's/$/\/*_L00*_R1*fastq.gz/g')
+toSearch=$(echo $directs | sed 's/,/*_L00*_R1*fastq.gz /g'| sed 's/$/*_L00*_R1*fastq.gz/g')
 fastq2=$(ls -m \$toSearch | tr -d '[:space:]')
 
 fastqs=$(echo \$fastq1 \$fastq2)
@@ -98,7 +101,7 @@ conda 'star=2.7.9a'
 
 '''
 mkdir output
-STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull --clipAdapterType CellRanger4
+STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull
 '''
 
 }

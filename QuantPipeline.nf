@@ -26,6 +26,7 @@ params.gtf="$projectDir/ref/genes.gtf" //gtf used, include standard one but allo
 params.MakeSNPScript="$projectDir/scripts/Make.SNPs.R" //R script used for making SNP counts, probably don't want user to change in most situations
 params.AlleleCountJar="$projectDir/scripts/AlleleCount.jar"
 params.UMILen=12
+params.QCScript="scripts/Phased.UMI.QC.R"
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 
 //this step processes the VCF into the form you need it (assumes already phased)
@@ -160,5 +161,29 @@ Rscript Make.SNPs.R comb.bed counts.txt SNP.counts.txt
 }
 
 
+process PhasedUMI_QC
+{
 
+publishDir "${params.outdir}/SNPLevelCounts"
+
+input:
+path QCScript, stageAs:"Phased.UMI.QC.R" from params.QCScript
+path counts, stageAs:"counts.txt" from gene_counts_ch
+path output, stageAs:"output" from STAR_Dir
+
+output:
+path "hist.ratio.pdf" into QC_pdf
+path "Basic.QC.txt" into QC_tot
+path "UMI.counts.by.gene.txt" into QC_counts
+
+conda 'r-tidyr=1.1.3 r-matrix'
+
+
+'''
+Rscript Phased.UMI.QC.R counts.txt output
+'''
+
+
+
+}
 

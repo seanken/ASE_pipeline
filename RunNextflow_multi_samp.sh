@@ -18,7 +18,6 @@
 source /broad/software/scripts/useuse
 
 
-#export CLASSPATH=/ahg/regevdata/projects/612-eqtl/eQTL_testing/STARSolo/Code:/ahg/regevdata/projects/612-eqtl/eQTL_testing/Code_for_Kiran/Phasing/HTSJDK/htsjdk/build/libs/htsjdk-2.21.1-3-g3df5a35-SNAPSHOT.jar
 
 SEEDFILE=samps.txt
 
@@ -32,14 +31,11 @@ mkdir $workdir
 
 cd $workdir
 
-nextflow=/stanley/levin_asap/ssimmons/eQTL/Code/AlleleExpressionPipeline/version1.0/nextflow
-pipeline=/stanley/levin_asap/ssimmons/eQTL/Code/AlleleExpressionPipeline/version1.0/QuantPipeline.nf 
+nextflow=/stanley/levin_asap/ssimmons/eQTL/Code/AlleleExpressionPipeline/version2.0/ASE_pipeline/nextflow
+pipeline=/stanley/levin_asap/ssimmons/eQTL/Code/AlleleExpressionPipeline/version2.0/ASE_pipeline/QuantPipeline.nf 
 vcf=/stanley/levin_asap_storage/612-eqtl/GenotypeData/Clean_vcf/Combined/comb.no.chr.vcf.gz
 outdir=output
 mkdir output
 
-
-
-
-$nextflow $pipeline --input_vcf $vcf --vcf_col $vcf_col --input_dirs $input_dirs --outdir $outdir --use_cond 1 -resume
+$nextflow $pipeline --input_vcf $vcf --vcf_col $vcf_col --input_dirs $input_dirs --outdir $outdir
 

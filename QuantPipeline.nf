@@ -18,13 +18,13 @@ params.numCells=3000 //number of cells expected
 
 //Files used in process and other params
 params.numThreads=8
-params.ref="$projectDir/ref/STAR_nuc_ref" //STAR reference to use--for now just human built in, though users can pass their own
+params.ref="$projectDir/ref/STAR_ref" //STAR reference to use--for now just human built in, though users can pass their own
 params.num10X_version="v3" //version of 10X, allows you to pick the correct list
 params.whitelist="$projectDir/ref/whitelist_${params.num10X_version}/whitelist.txt" //10X whitelist
 params.use_conda=0 //decide if want to download dependencies with conda. If not must be on path
 params.gtf="$projectDir/ref/genes.gtf" //gtf used, include standard one but allow user to overright, should match STAR reference
 params.MakeSNPScript="$projectDir/scripts/Make.SNPs.R" //R script used for making SNP counts, probably don't want user to change in most situations
-//params.AlleleCountJar="$projectDir/scripts/AlleleCount_WASP.jar"
+params.AlleleCountJar="$projectDir/scripts/AlleleCount.jar"
 params.UMILen=12
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 
@@ -98,7 +98,7 @@ conda 'star=2.7.9a'
 
 '''
 mkdir output
-STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag
+STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull --clipAdapterType CellRanger4
 '''
 
 }
@@ -113,17 +113,14 @@ publishDir "${params.outdir}/AlleleCounts"
 input:
 path output, stageAs:"output" from STAR_Dir
 path vcf, stageAs:"new.vcf" from new_vcf_ch 
-//path AlleleCountJar, stageAs:"AlleleCount.jar" from params.AlleleCountJar
+path AlleleCountJar, stageAs:"AlleleCount.jar" from params.AlleleCountJar
 
 output:
 path "counts.txt" into gene_counts_ch
 
 '''
-java Phasing_Illumina/PhaseCount_WASP  output/resultsAligned.sortedByCoord.out.bam new.vcf 0 counts.txt
+java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam counts.txt
 '''
-
-
-//java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam new.vcf 0 counts.txt
 
 }
 

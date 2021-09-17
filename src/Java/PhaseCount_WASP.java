@@ -14,9 +14,9 @@ public static void main(String args[]) throws Exception
 {
 ArrayList<String[]> ret=new ArrayList<String[]>();
 File bamFile = new File(args[0]); 
-File vcfFile=new File(args[1]);
-int ind=Integer.parseInt(args[2]);
-String saveFile=args[3];
+//File vcfFile=new File(args[1]);
+//int ind=Integer.parseInt(args[2]);
+String saveFile=args[1];
 
 FileWriter savFil = new FileWriter(saveFile); 
 

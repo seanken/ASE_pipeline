@@ -18,7 +18,7 @@
 source /broad/software/scripts/useuse
 
 
-export CLASSPATH=/ahg/regevdata/projects/612-eqtl/eQTL_testing/STARSolo/Code:/ahg/regevdata/projects/612-eqtl/eQTL_testing/Code_for_Kiran/Phasing/HTSJDK/htsjdk/build/libs/htsjdk-2.21.1-3-g3df5a35-SNAPSHOT.jar
+#export CLASSPATH=/ahg/regevdata/projects/612-eqtl/eQTL_testing/STARSolo/Code:/ahg/regevdata/projects/612-eqtl/eQTL_testing/Code_for_Kiran/Phasing/HTSJDK/htsjdk/build/libs/htsjdk-2.21.1-3-g3df5a35-SNAPSHOT.jar
 
 SEEDFILE=samps.txt
 

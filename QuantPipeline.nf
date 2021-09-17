@@ -161,6 +161,7 @@ Rscript Make.SNPs.R comb.bed counts.txt SNP.counts.txt
 }
 
 
+//Calculates some basic QC about the phased data
 process PhasedUMI_QC
 {
 

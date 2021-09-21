@@ -121,6 +121,7 @@ path "counts.txt" into gene_counts_ch
 
 '''
 java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam counts.txt
+rm output/resultsAligned.sortedByCoord.out.bam
 '''
 
 }

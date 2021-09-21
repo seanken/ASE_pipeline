@@ -11,7 +11,7 @@ params.input_vcf //vcf used
 params.vcf_col // sample name in the vcf to use
 params.input_dirs //comma seperated list of directories containing 10X fastqs, will use all fastqs in those directories
 params.outdir //directory to output results to
-
+params.snps //list of SNPs to use
 
 //Params for STARSolo
 params.numCells=3000 //number of cells expected
@@ -80,7 +80,7 @@ fastqs=$(echo \$fastq1 \$fastq2)
 process RunSTARSolo
 {
 
-publishDir "${params.outdir}/STARSolo"
+publishDir "${params.outdir}/STARSolo", mode: 'rellink'
 
 input:
 env fastqs from fastq_ch
@@ -95,10 +95,7 @@ env UMILen from params.UMILen
 output:
 path "output" into STAR_Dir
 
-//if(params.use_conda==1)
-//{
-conda 'star=2.7.9a'
-//}
+conda 'star=2.7.8a'
 
 '''
 mkdir output
@@ -112,7 +109,7 @@ STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhi
 //This process runs a java based method to count number of alleles, giving results as gene level
 process CountAlleles
 {
-publishDir "${params.outdir}/AlleleCounts"
+publishDir "${params.outdir}/AlleleCounts", mode: 'rellink'
 
 input:
 path output, stageAs:"output" from STAR_Dir
@@ -134,7 +131,7 @@ java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam counts.txt
 //Extends allele counts to SNP level
 process SNPLevel
 {
-publishDir "${params.outdir}/SNPLevelCounts"
+publishDir "${params.outdir}/SNPLevelCounts", mode: 'rellink'
 
 input:
 path gtf, stageAs:"genes.gtf" from params.gtf
@@ -142,12 +139,16 @@ path vcf, stageAs:"new.vcf" from new_vcf_ch
 path counts, stageAs:"counts.txt" from gene_counts_ch
 path MakeSNPScript, stageAs:"Make.SNPs.R" from params.MakeSNPScript
 path makeBeds, stageAs:"makeBeds.sh" from params.makeBeds //Makes gene and SNP beds
+path output, stageAs:"output" from STAR_Dir
+path snps, stageAs:"snps.txt" from params.snps
 
 output:
-path "SNP.counts.txt" into SNPS_allele_ch
+path "SNP.counts.matrix.mtx.gz" into SNPS_allele_ch
+path "SNP.counts.cbc.txt" into SNPS_allele_ch_cbc
+path "SNP.counts.snps.txt" into SNPS_allele_ch_snps
 
 
-conda 'bedtools=2.30.0 r-tidyr=1.1.3'
+conda 'bedtools=2.30.0 r-tidyr=1.1.3 r-tidytext'
 
 
 
@@ -155,8 +156,11 @@ conda 'bedtools=2.30.0 r-tidyr=1.1.3'
 '''
 source makeBeds.sh genes.gtf new.vcf
 bedtools intersect -a snps.bed -b gene.bed -wa -wb | awk '{print $4"\t"$9"\t"$5}' | sort | uniq > comb.bed
-Rscript Make.SNPs.R comb.bed counts.txt SNP.counts.txt
+Rscript Make.SNPs.R comb.bed counts.txt snps.txt output/resultsSolo.out/GeneFull/filtered/barcodes.tsv SNP.counts
+gzip SNP.counts.matrix.mtx
 '''
+
+
 
 }
 
@@ -165,7 +169,7 @@ Rscript Make.SNPs.R comb.bed counts.txt SNP.counts.txt
 process PhasedUMI_QC
 {
 
-publishDir "${params.outdir}/QCPhase"
+publishDir "${params.outdir}/QCPhase", mode: 'move'
 
 input:
 path QCScript, stageAs:"Phased.UMI.QC.R" from params.QCScript

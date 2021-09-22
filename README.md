@@ -1,4 +1,4 @@
-# ASE_pipeline
+# Allele Specific Expression Pipeline For 10X Fata
 
 This pipeline is built as part of the ASAP project to take single nuclei data and a phased vcf file and, using that data, get allele specific expression information for the single nuclei data using STARSolo. It requires Java, nextflow, and Conda. Detailed running instructions will be added soon.
 
@@ -17,7 +17,7 @@ You are then ready to run!
 
 # Generating Reference
 
-In order to run this pipeline you need a STARSolo reference and a matching gtf file. Will add details later.
+In order to run this pipeline you need a STAR reference and a matching gtf file. See STAR documentation for details.
 
 # Phased Genotype Data
 
@@ -44,3 +44,7 @@ pipeline=/path/to/QuantPipeline.nf
 
 $nextflow $pipeline [options]
 ```
+
+The pipeline has a mix of optional and required options.
+
+

@@ -42,7 +42,6 @@ path "new.vcf" into new_vcf_ch
 
 
 
-conda 'bcftools=1.13'
 
 '''
 bcftools view -H -O v -s $vcf_col input.vcf.gz | grep -v "0|0" | grep -v "1|1" > new.vcf
@@ -93,7 +92,6 @@ env UMILen from params.UMILen
 output:
 path "output" into STAR_Dir
 
-conda 'star=2.7.8a'
 
 '''
 mkdir output
@@ -174,7 +172,7 @@ path "hist.ratio.pdf" into QC_pdf
 path "Basic.QC.txt" into QC_tot
 path "UMI.counts.by.gene.txt" into QC_counts
 
-conda 'r-tidyr=1.1.3 r-matrix'
+//conda 'r-tidyr=1.1.3 r-matrix'
 
 
 '''

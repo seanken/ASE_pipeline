@@ -61,13 +61,13 @@ $nextflow $pipeline [options]
 
 The pipeline has a mix of optional and required options.
 
-##Common Errors
+# Common Errors
 
 When running the pipeline with conda activated, we have sometimes gotten the error:
 
-'''
+```
 .command.run: line 92: /bin/activate: No such file or directory
-'''
+```
 
 for the PrepVCF step. This seems to be because 'conda info --json' throw an error (as does 'conda info --envs'). We found the issue for us is with ~/.conda, and we simply removed that directory. Note take this advide with a grain of salt --it worked for us and how we have our conda directory set up, but might not work in all cases and might cause issues with other conda environments.
 

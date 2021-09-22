@@ -15,6 +15,20 @@ gunzip ref/whitelist_v3/whitelist.txt.gz
 
 You are then ready to run!
 
+# Requirements
+
+The pipeline is set up so that all you need to run it is Conda, nextflow, and java as mentioned above. It is, however, possible to run the pipeline without conda. In that case, however, the number of requirements greatly increases. In that case, in addition to Java and nextflow, you will need the following installed/on the PATH:
+1) bcftools
+2) bedtools
+3) R with tidyr, dply, and Matrix installed
+4) STAR v2.7.8a (note the code does not work with earlier (due to changes in the way GN/GX is calculated for GeneFull) or later versions (due to changes in --limitOutSJcollapsed), though the script can be easily modified to do so)
+
+A bash script to install these with conda is in scripts/makeConda.sh. Though this still requires conda, it allows you to create one conda environment instead of one per sample processed.
+
+We are planning on creating a docker container for this pipeline as well, but have not done so yet.
+
+
+
 # Generating Reference
 
 In order to run this pipeline you need a STAR reference and a matching gtf file. See STAR documentation for details.
@@ -47,4 +61,13 @@ $nextflow $pipeline [options]
 
 The pipeline has a mix of optional and required options.
 
+##Common Errors
+
+When running the pipeline with conda activated, we have sometimes gotten the error:
+
+'''
+.command.run: line 92: /bin/activate: No such file or directory
+'''
+
+for the PrepVCF step. This seems to be because 'conda info --json' throw an error (as does 'conda info --envs'). We found the issue for us is with ~/.conda, and we simply removed that directory. Note take this advide with a grain of salt --it worked for us and how we have our conda directory set up, but might not work in all cases and might cause issues with other conda environments.
 

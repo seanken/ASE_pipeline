@@ -15,7 +15,7 @@ gunzip ref/whitelist_v3/whitelist.txt.gz
 
 You are then ready to run!
 
-# Requirements
+## Requirements
 
 The pipeline is set up so that all you need to run it is Conda, nextflow, and java as mentioned above. It is, however, possible to run the pipeline without conda. In that case, however, the number of requirements greatly increases. In that case, in addition to Java and nextflow, you will need the following installed/on the PATH:
 1) bcftools
@@ -29,15 +29,15 @@ We are planning on creating a docker container for this pipeline as well, but ha
 
 
 
-# Generating Reference
+## Generating Reference
 
 In order to run this pipeline you need a STAR reference and a matching gtf file. See STAR documentation for details.
 
-# Phased Genotype Data
+## Phased Genotype Data
 
 This pipeline requires phased genotype data in vcf, vcf.gz, bcf, or bcf.gz form. We have used Eagle2 for our phasing with an online portal (will add link).
 
-# Fastq data
+## Fastq data
 
 This pipeline requires 10X fastq files. Must be formatted as described by 10X on their website, so should be:
 
@@ -50,7 +50,7 @@ Note the pipeline assumes that the name do not contain L00 or R1/R2, and name of
 
 Instead of passing the fastq directly, directory names are passed. Can pass multiple directories (seperated by commas). All the fastq files in these directories should be from the same sample (so 10X channel and individual).
 
-# How To Run Pipeline
+## How To Run Pipeline
 
 ```
 nextflow=/path/to/nextflow
@@ -61,7 +61,7 @@ $nextflow $pipeline [options]
 
 The pipeline has a mix of optional and required options.
 
-# Common Errors
+## Common Errors
 
 When running the pipeline with conda activated, we have sometimes gotten the error:
 

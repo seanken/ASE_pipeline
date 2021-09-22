@@ -1,9 +1,9 @@
-# Allele Specific Expression Pipeline For 10X Fata
+# Allele Specific Expression Pipeline For 10X Data
 
 This pipeline is built as part of the ASAP project to take single nuclei data and a phased vcf file and, using that data, get allele specific expression information for the single nuclei data using STARSolo. It requires Java, nextflow, and Conda. Detailed running instructions will be added soon.
 
 
-# Set Up
+## Set Up
 
 You need to have Java installed (v8 or later) and some version of Conda, as well as nextflow (https://www.nextflow.io/). To install this, download it from git hub with:
 ```

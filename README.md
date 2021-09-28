@@ -25,6 +25,8 @@ The pipeline is set up so that all you need to run it is Conda, nextflow, and ja
 
 A bash script to install these with conda is in scripts/makeConda.sh. Though this still requires conda, it allows you to create one conda environment instead of one per sample processed.
 
+If you want to run the annotation step also need to have Seurat v4.0 installed and Azimuth v.0.4.3. See https://satijalab.org/seurat/articles/install.html for details on installing Seurat, for Azimuth see their github.
+
 We are planning on creating a docker container for this pipeline as well, but have not done so yet.
 
 

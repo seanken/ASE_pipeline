@@ -28,7 +28,8 @@ params.AlleleCountJar="$projectDir/scripts/AlleleCount.jar"
 params.UMILen=12
 params.QCScript="$projectDir/scripts/Phased.UMI.QC.R"
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
-
+params.scrubletScript="$projectDir/scripts/RunScrublet.py"
+params.seuratScript="$projectDir/scripts/RunSeurat.R"
 //this step processes the VCF into the form you need it (assumes already phased)
 process PrepVCF
 {
@@ -182,4 +183,51 @@ Rscript Phased.UMI.QC.R counts.txt output
 
 
 }
+
+
+
+//Runs Scrublet on the sample using output of STARSolo
+process RunScrublet
+{
+
+publishDir "${params.outdir}/Scrublet", mode: 'rellink'
+
+input:
+path output, stageAs:"output" from STAR_Dir
+path scrubletScript, stageAs:"RunScrublet.py" from params.scrubletScript
+
+output:
+path "scrub.txt" into scrub_out
+
+'''
+python RunScrublet.py output/resultsSolo.out/GeneFull/filtered/matrix.mtx scrub.txt
+'''
+
+}
+
+
+
+
+
+process RunSeurat
+{
+
+publishDir "${params.outdir}/Seurat", mode: 'move'
+
+input: 
+path SeurScript, stageAs:"RunSeurat.R" from params.seuratScript
+path output, stageAs:"output" from STAR_Dir
+
+output:
+path "res.azimuth.cortex.txt" into Azimuth_out
+path "res.seur.RDS" into Seur_out
+path "res.var.genes.txt" into Var_out
+path "res.PseudoBulk.RDS" into Pseudo_out
+
+'''
+Rscript RunSeurat.R output/resultsSolo.out/GeneFull/filtered res
+'''
+
+}
+
 

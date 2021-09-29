@@ -7,23 +7,26 @@ library(tidyr)
 ##Assumes has Seurat object with columns corresponding to the sample (samp), the location of the location of SNPLevelCounts/comb.bed output by the pipeline (snp_col), and the location of the AlleleCounts/counts.txt output by the pipeline (all_col). Assumes the cell names in Seurat are [samp name]_[CBC]
 ##genes is the list of genes to get the SNP info for
 ##Returns a list with 3 entries: ref, alt, and meta.
-GetSNPs<-function(seur,genes,samp="orig.ident",snp_col="SNP",all_col="Allele")
+GetSNPs<-function(seur,genes,samp="orig.ident",snp_col="SNP",all_col="Allele",cond="PD")
 {
 print("Make Nice")
-tab=seur@meta.data[,c(samp,snp_col,all_col)]
-colnames(tab)=c("Samp","SNP","Allele")
+tab=seur@meta.data[,c(samp,snp_col,all_col,cond)]
+colnames(tab)=c("Samp","SNP","Allele","Condition")
 tab["Name"]=rownames(seur@meta.data)
-dat<-tab %>% group_by(Samp,SNP,Allele) %>% summarise() %>% as.data.frame()
+dat<-tab %>% group_by(Samp,SNP,Allele,Condition) %>% summarise() %>% as.data.frame()
 
 print("Get SNP data")
 out=lapply(1:dim(dat)[1],function(i){
 print(i)
 mat=loadSNPs(dat[i,1],dat[i,2],dat[i,3],tab[tab[,"Samp"]==dat[i,1] & tab[,"SNP"]==dat[i,2] & tab[,"Allele"]==dat[i,3],"Name"],genes)
+mat["Condition"]=dat[i,"Condition"]
 print(head(mat))
 return(mat)
 })
 
 dat=do.call(rbind,out)
+
+dat=dat[!is.na(dat[,"Condition"]),]
 
 return(dat)
 

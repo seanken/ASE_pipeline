@@ -9,7 +9,7 @@
 //Input files Required input
 params.input_vcf //vcf used
 params.vcf_col // sample name in the vcf to use
-params.input_dirs //comma seperated list of directories containing 10X fastqs, will use all fastqs in those directories
+params.input_dirs //comma seperated list of directories containing 10X fastqs, will use all fastqs in those directories, can also be prefixes
 params.outdir //directory to output results to
 params.snps //list of SNPs to use
 
@@ -30,6 +30,7 @@ params.QCScript="$projectDir/scripts/Phased.UMI.QC.R"
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 params.scrubletScript="$projectDir/scripts/RunScrublet.py"
 params.seuratScript="$projectDir/scripts/RunSeurat.R"
+
 //this step processes the VCF into the form you need it (assumes already phased)
 process PrepVCF
 {
@@ -45,6 +46,7 @@ path "new.vcf" into new_vcf_ch
 
 
 '''
+tabix -p vcf input.vcf.gz
 bcftools view -H -O v -s $vcf_col input.vcf.gz | grep -v "0|0" | grep -v "1|1" > new.vcf
 '''
 
@@ -96,7 +98,7 @@ path "output" into STAR_Dir
 
 '''
 mkdir output
-STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter CellRanger2.2 $numCells 0.99 10 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull --limitOutSJcollapsed 10000000 --limitIObufferSize=1500000000
+STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull --limitOutSJcollapsed 10000000 --limitIObufferSize=1500000000 --limitBAMsortRAM 60000000000 --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
 '''
 
 }
@@ -118,7 +120,6 @@ path "counts.txt" into gene_counts_ch
 
 '''
 java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam counts.txt
-rm output/resultsAligned.sortedByCoord.out.bam
 '''
 
 }

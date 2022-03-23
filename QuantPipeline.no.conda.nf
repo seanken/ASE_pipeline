@@ -30,7 +30,7 @@ params.QCScript="$projectDir/scripts/Phased.UMI.QC.R"
 params.makeBeds="$projectDir/scripts/makeBeds.sh"
 params.scrubletScript="$projectDir/scripts/RunScrublet.py"
 params.seuratScript="$projectDir/scripts/RunSeurat.R"
-
+params.featSTARSolo="GeneFull"
 //this step processes the VCF into the form you need it (assumes already phased)
 process PrepVCF
 {
@@ -91,6 +91,7 @@ env fastqs from fastq_ch
 path whitelist, stageAs: "whitelist.txt" from params.whitelist
 env numThreads from params.numThreads
 env UMILen from params.UMILen
+env feat from params.featSTARSolo
 
 output:
 path "output" into STAR_Dir
@@ -98,7 +99,7 @@ path "output" into STAR_Dir
 
 '''
 mkdir output
-STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures GeneFull --limitOutSJcollapsed 10000000 --limitIObufferSize=1500000000 --limitBAMsortRAM 60000000000 --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
+STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures $feat --limitOutSJcollapsed 10000000 --limitIObufferSize=1500000000 --limitBAMsortRAM 60000000000 --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
 '''
 
 }

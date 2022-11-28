@@ -18,6 +18,12 @@ File bamFile = new File(args[0]);
 //int ind=Integer.parseInt(args[2]);
 String saveFile=args[1];
 
+String gene_tag="GN";
+if(args.length==3)
+{
+gene_tag=args[2];
+}
+
 FileWriter savFil = new FileWriter(saveFile); 
 
 
@@ -48,7 +54,7 @@ String seq=read.getReadString();
 
 String cbc=read.getStringAttribute("CB");
 String umi=read.getStringAttribute("UB");
-String gene=read.getStringAttribute("GN");
+String gene=read.getStringAttribute(gene_tag);
 
 int numb=0;
 try{

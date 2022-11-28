@@ -3,7 +3,7 @@ library(tidyr);
 library(Matrix);
 
 
-getQC=function(count_fil,starsolo_dir)
+getQC=function(count_fil,starsolo_dir,quantType="GeneFull")
 {
 print("Get Allele Counts")
 allele=read.table(count_fil,stringsAsFactors=F)
@@ -12,12 +12,12 @@ colnames(allele)=c("CBC","Gene","Allele","nUMI")
 allele=allele[grep("All",allele[,"Allele"]),]
 
 print("Get Gene Counts")
-dat=readMM(paste(starsolo_dir,"/resultsSolo.out/GeneFull/filtered/matrix.mtx",sep=""))
-genes=read.table(paste(starsolo_dir,"/resultsSolo.out/GeneFull/filtered/features.tsv",sep=""),stringsAsFactors=F,sep="\t")
+dat=readMM(paste(starsolo_dir,"/resultsSolo.out/",quantType,"/filtered/matrix.mtx",sep=""))
+genes=read.table(paste(starsolo_dir,"/resultsSolo.out/",quantType,"/filtered/features.tsv",sep=""),stringsAsFactors=F,sep="\t")
 colnames(genes)=c("Gene_id","Gene","Type")
 genes["TotUMI"]=rowSums(dat)
 genes<-genes %>% group_by(Gene) %>% summarise(Tot=sum(TotUMI)) %>% as.data.frame()
-cells=scan(paste(starsolo_dir,"/resultsSolo.out/GeneFull/filtered/barcodes.tsv",sep=""),"")
+cells=scan(paste(starsolo_dir,"/resultsSolo.out/",quantType,"/filtered/barcodes.tsv",sep=""),"")
 
 allele=allele[allele$CBC %in% cells,] %>% group_by(Gene,Allele) %>% summarise(nUMI=sum(nUMI)) %>% spread(Allele,nUMI,fill=0) %>% as.data.frame()
 
@@ -52,7 +52,8 @@ if(!interactive())
 args = commandArgs(trailingOnly=TRUE)
 count_fil=args[1]
 starsolo_dir=args[2]
-getQC(count_fil,starsolo_dir)
+quantType=args[3]
+getQC(count_fil,starsolo_dir,quantType)
 }
 
 

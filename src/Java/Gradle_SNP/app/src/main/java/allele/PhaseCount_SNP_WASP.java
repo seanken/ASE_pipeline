@@ -8,11 +8,11 @@ import java.util.Map.Entry;
 import java.util.Map;
 
 
-public class PhaseCount_WASP
+public class PhaseCount_SNP_WASP
 {
     public static void main(String args[]) throws Exception
     {
-        Gene_ASE_Count ASECounter=new Gene_ASE_Count(args);
+        SNP_ASE_Count ASECounter=new SNP_ASE_Count(args);
         ASECounter.IterateOverAll();
 
     }

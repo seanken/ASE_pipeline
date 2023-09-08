@@ -8,7 +8,7 @@ import java.util.Map.Entry;
 import java.util.Map;
 
 
-public class SNP_ASE_Count
+public class Gene_ASE_Count
 {
     protected int Good; //Keeps track of the number of reads that support a single allele (want to be large)
     protected int Bad; //Keeps track of the number of reads that support multiple alleles (want to be small)
@@ -20,9 +20,9 @@ public class SNP_ASE_Count
 
 
     //Generates the initial object and parses arguments
-    public SNP_ASE_Count(String args[]) throws Exception
+    public Gene_ASE_Count(String args[]) throws Exception
     {
-        ArrayList<String[]> ret=new ArrayList<String[]>();
+        //ArrayList<String[]> ret=new ArrayList<String[]>();
         this.bamFile = new File(args[0]); 
         //File vcfFile=new File(args[1]);
         //int ind=Integer.parseInt(args[2]);
@@ -211,52 +211,32 @@ public class SNP_ASE_Count
         else
         {
             this.Bad=this.Bad+1;
-            //return;
+            return;
         }
 
         //Adds allele information to UMIMap
-        
+        String res=umi+" "+cbc+" "+gene;
         String val="None";
-        //if(All1>All2)
-        //{
-        //    val="All1";
-        //}
-        //if(All2>All1)
-        //{
-        //    val="All2";
-        //}
-
-        String chrom=read.getContig();
-        int[] SNPs=read.getSignedIntArrayAttribute("vG");
-        int numSNPs=SNPs.length;
-        for(int i=0;i<numSNPs;i++)
+        if(All1>All2)
         {
-            String snp=chrom+":"+String.valueOf(SNPs[i]);
-            String res=umi+" "+cbc+" "+snp;
-            byte valbyte=Alls[i];
-            if(valbyte==1)
-            {
-                val="All1";
-            }else if(valbyte==2)
-            {
-                val="All2";
-            } else{
-                val="None";
-                continue;
-            }
-            if(this.UMIMap.containsKey(res))
-            {
-                String cur=this.UMIMap.get(res);
-                if(!cur.equals(val))
-                {
-                    this.UMIMap.put(res,"Ambig");
-                }
-            }
-            else
-            {
-                this.UMIMap.put(res,val);
-            }
+            val="All1";
+        }
+        if(All2>All1)
+        {
+            val="All2";
+        }
 
+        if(this.UMIMap.containsKey(res))
+        {
+            String cur=this.UMIMap.get(res);
+            if(!cur.equals(val))
+            {
+                this.UMIMap.put(res,"Ambig");
+            }
+        }
+        else
+        {
+            this.UMIMap.put(res,val);
         }
 
 

@@ -20,7 +20,7 @@ You are then ready to run!
 The pipeline is set up so that all you need to run it is Conda, nextflow, and java as mentioned above. It is, however, possible to run the pipeline without conda. In that case, however, the number of requirements greatly increases. In that case, in addition to Java and nextflow, you will need the following installed/on the PATH:
 1) bcftools
 2) bedtools
-3) R with tidyr, dply, and Matrix installed
+3) R with tidyr, dply, and Matrix installed (only required for QC)
 4) STAR v2.7.10 (does not work with earlier versions, might work with newer versions but not tested)
 
 A bash script to install these with conda is in scripts/makeConda.star10.sh. 
@@ -94,11 +94,19 @@ A list of options:
 
 `--featSTARSolo:` Tells STARSolo how to quantify. By default uses GeneFull (so introns and exons are used), though can use Gene as well (only exons).
 
+`--noQC:` Tells the pipeline not to get QC. Useful if want to avoid installing R and associated packages. Not recomended. 
+
+`--UMILen:` Length of UMI used (in base pairs). 12 by default. Pipeline currently assumes this is in read 1, right after the cell barcode, which is 16bp.
+
 ## Using with multiplexed samples
 
 This pipeline by default is meant to be run in the setting where there are cells from one individual in a given 10X channel. In many modern experiments, however, many samples from different individuals are mixed together to allow for demultiplexing using genotype, hashing, or similiar approaches. 
 
 In that case one needs to install two addition packages, CellRanger and sinto (https://timoast.github.io/sinto/). One can then run CellRanger on the channel and their tool of choice on the ouptut to get a list of cells per individual. Then all one has to do is run the above pipeline with the --input_bam and --cellFile options. Working on alternative approaches as well that might be cleaner. 
+
+## Downstream analysis
+
+To work with the output of this pipeline it is recomended to use the scAlleleExpression package in R (https://github.com/seanken/scAlleleExpression). No current python pipeline to do so but hopefully that will be a future direction.
 
 ## Older pipeline versions
 

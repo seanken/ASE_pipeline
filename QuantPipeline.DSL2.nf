@@ -36,6 +36,7 @@ params.UMILen=12
 QCScript="$projectDir/scripts/Phased.UMI.QC.R"
 makeBeds="$projectDir/scripts/makeBeds.sh"
 params.featSTARSolo="GeneFull"
+params.noQC //Passed only if do not want QC steps to run
 
 
 //Check inputs
@@ -115,7 +116,11 @@ workflow{
     CountAllelesSNP(starSoloDir,AlleleSNPCountJar) //SNP level, no sharing betwen SNPs
     
     //Get QC information
-    PhasedUMI_QC(QCScript,countsGeneLevel,starSoloDir,params.featSTARSolo)
+    if(!params.noQC)
+    {
+        PhasedUMI_QC(QCScript,countsGeneLevel,starSoloDir,params.featSTARSolo)
+    }
+    
 }
 
 

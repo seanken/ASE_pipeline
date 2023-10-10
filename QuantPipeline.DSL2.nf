@@ -15,6 +15,7 @@ params.input_dirs=null //comma seperated list of directories containing 10X fast
 params.input_bam=null //If input bam instead of fastq
 params.input_bam_bai="${params.input_bam}.bai"
 params.outdir=null //directory to output results to
+params.sortRam=60000000000 
 //params.snps //list of SNPs to use
 params.cellFile=null //list of cells to use, optional
 
@@ -30,6 +31,7 @@ params.whitelist="$projectDir/ref/whitelist_${params.num10X_version}/whitelist.t
 params.gtf="$projectDir/ref/genes.gtf" //gtf used, include standard one but allow user to overright, should match STAR reference
 //params.MakeSNPScript="$projectDir/scripts/Make.SNPs.R" //R script used for making SNP counts, probably don't want user to change in most situations
 AlleleCountJar="$projectDir/scripts/AlleleCount.jar"
+AlleleSNPCountJar="$projectDir/scripts/AlleleCountSNP.jar"
 params.UMILen=12
 QCScript="$projectDir/scripts/Phased.UMI.QC.R"
 makeBeds="$projectDir/scripts/makeBeds.sh"
@@ -105,11 +107,12 @@ workflow{
     faPath=GetFastqPath(inputDirs)
 
     //Run STARSolo
-    starSoloDir=RunSTARSolo(faPath,newvcf,params.numCells,params.ref,params.whitelist,params.numThreads,params.UMILen,params.featSTARSolo)
+    starSoloDir=RunSTARSolo(faPath,newvcf,params.numCells,params.ref,params.whitelist,params.numThreads,params.UMILen,params.featSTARSolo,params.sortRam)
     
     //Get ASE information
-    countsGeneLevel=CountAlleles(starSoloDir,AlleleCountJar)
-    SNPLevel(params.gtf,newvcf,makeBeds)
+    countsGeneLevel=CountAlleles(starSoloDir,AlleleCountJar) //Gets Gene level
+    SNPLevel(params.gtf,newvcf,makeBeds) //Gets SNP level, sharing between SNPs in same gene
+    CountAllelesSNP(starSoloDir,AlleleSNPCountJar) //SNP level, no sharing betwen SNPs
     
     //Get QC information
     PhasedUMI_QC(QCScript,countsGeneLevel,starSoloDir,params.featSTARSolo)
@@ -226,6 +229,7 @@ process RunSTARSolo
     env numThreads 
     env UMILen 
     env feat 
+    env sortRam
 
     output:
     path "output" 
@@ -234,7 +238,7 @@ process RunSTARSolo
     '''
     mkdir output
     echo STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures $feat --limitOutSJcollapsed 10000000 --limitIObufferSize=1500000000 --limitBAMsortRAM 60000000000 --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
-    STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures $feat --limitOutSJcollapsed 10000000 --limitIObufferSize 1500000000 1500000000 --limitBAMsortRAM 60000000000 --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
+    STAR --genomeDir $ref --readFilesIn $fastqs --soloType CB_UMI_Simple --soloCBwhitelist  whitelist.txt --soloUMIlen $UMILen --soloUMIfiltering MultiGeneUMI_CR --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM vG vA vG --outSAMtype BAM SortedByCoordinate --soloCellFilter EmptyDrops_CR $numCells 0.99 10 45000 90000 500 0.01 20000 0.01 10000 --runThreadN $numThreads --outFileNamePrefix output/results --readFilesCommand zcat --varVCFfile new.vcf --waspOutputMode SAMtag --soloFeatures $feat --limitOutSJcollapsed 10000000 --limitIObufferSize 1500000000 1500000000 --limitBAMsortRAM $sortRam --outFilterScoreMin 30 --soloUMIdedup 1MM_CR --clipAdapterType CellRanger4 
     '''
 
 }
@@ -245,6 +249,24 @@ process RunSTARSolo
 process CountAlleles
 {
     publishDir "${params.outdir}/AlleleCounts", mode: 'rellink'
+
+    input:
+    path "output" 
+    path "AlleleCount.jar" 
+
+    output:
+    path "counts.txt" 
+
+    '''
+    java -jar AlleleCount.jar output/resultsAligned.sortedByCoord.out.bam counts.txt
+    '''
+
+}
+
+//This process runs a java based method to count number of alleles, giving results as snp level
+process CountAllelesSNP
+{
+    publishDir "${params.outdir}/AlleleCountsSNP", mode: 'rellink'
 
     input:
     path "output" 

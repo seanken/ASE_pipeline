@@ -3,13 +3,19 @@ library(tidyr);
 library(Matrix);
 
 
-getQC=function(count_fil,starsolo_dir,quantType="GeneFull")
+getQC=function(count_fil,count_snp,starsolo_dir,quantType="GeneFull")
 {
 print("Get Allele Counts")
 allele=read.table(count_fil,stringsAsFactors=F)
 print(head(allele))
 colnames(allele)=c("CBC","Gene","Allele","nUMI")
 allele=allele[grep("All",allele[,"Allele"]),]
+
+print("Get SNP Level Allele Counts")
+alleleSNP=read.table(count_snp,stringsAsFactors=F)
+print(head(alleleSNP))
+colnames(alleleSNP)=c("CBC","SNP","Allele","nUMI")
+alleleSNP=alleleSNP[grep("All",alleleSNP[,"Allele"]),]
 
 print("Get Gene Counts")
 dat=readMM(paste(starsolo_dir,"/resultsSolo.out/",quantType,"/filtered/matrix.mtx",sep=""))
@@ -20,6 +26,7 @@ genes<-genes %>% group_by(Gene) %>% summarise(Tot=sum(TotUMI)) %>% as.data.frame
 cells=scan(paste(starsolo_dir,"/resultsSolo.out/",quantType,"/filtered/barcodes.tsv",sep=""),"")
 
 allele=allele[allele$CBC %in% cells,] %>% group_by(Gene,Allele) %>% summarise(nUMI=sum(nUMI)) %>% spread(Allele,nUMI,fill=0) %>% as.data.frame()
+alleleSNP=alleleSNP[alleleSNP$CBC %in% cells,] %>% group_by(SNP,Allele) %>% summarise(nUMI=sum(nUMI)) %>% spread(Allele,nUMI,fill=0) %>% as.data.frame()
 
 print("Make QC!")
 dat=inner_join(allele,genes)
@@ -31,13 +38,17 @@ percentPhased=numPhased/sum(dat[,"Tot"])
 numPhasedPerCell=numPhased/length(cells)
 numGenes10=sum(dat[,"All1"]+dat[,"All2"]>10)
 
+numSNPs10=sum(alleleSNP[,"All1"]+alleleSNP[,"All2"]>10)
+numSNPBoth=sum(alleleSNP[,"All1"]>0 & alleleSNP[,"All2"]>0 & alleleSNP[,"All1"]+alleleSNP[,"All2"]>10)
+percSNPBoth=100*numSNPBoth/numSNPs10
+
 dat=dat[dat$All1+dat$All2>10,]
 dat["Ratio"]=dat[,"All1"]/(dat[,"All1"]+dat[,"All2"])
 
 meanRatio=mean(dat[,"Ratio"])
 medRatio=median(dat[,"Ratio"])
 
-QC=data.frame(QC_Name=c("Num Phased UMI","Percent UMI Phased","Number Phased UMI per Cell","Number genes with >10 phased UMIs","Mean AI","Median AI"),QC_value=c(numPhased,percentPhased,numPhasedPerCell,numGenes10,meanRatio,medRatio))
+QC=data.frame(QC_Name=c("Num Phased UMI","Percent UMI Phased","Number Phased UMI per Cell","Number genes with >10 phased UMIs","Mean AI","Median AI","Number SNPs with >10 phased UMIs","Number SNPs with both alleles expressed","Percent SNPs with both alleles expressed"),QC_value=c(numPhased,percentPhased,numPhasedPerCell,numGenes10,meanRatio,medRatio,numSNPs10,numSNPBoth,percSNPBoth))
 
 write.table(QC,"Basic.QC.txt",sep="\t",quote=F,row.names=F)
 
@@ -52,8 +63,9 @@ if(!interactive())
 args = commandArgs(trailingOnly=TRUE)
 count_fil=args[1]
 starsolo_dir=args[2]
+count_snp=args[4]
 quantType=args[3]
-getQC(count_fil,starsolo_dir,quantType)
+getQC(count_fil,count_snp,starsolo_dir,quantType)
 }
 
 

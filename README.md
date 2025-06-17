@@ -112,3 +112,4 @@ To work with the output of this pipeline it is recomended to use the scAlleleExp
 
 There are multiple other versions of the pipeline present. The QuantPipeline.no.conda.nf was the one used for the associated publication. 
 
+This work was funded by Aligning Science Across Parkinson's [grant # ASAP-000301] through the Michael J. Fox Foundation for Parkinson's Research (MJFF).

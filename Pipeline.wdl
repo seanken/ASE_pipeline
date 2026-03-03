@@ -35,7 +35,7 @@ workflow ASE_Pipeline {
         
         # Resource parameters
         Int numThreads = 8
-        Int sortRam = 60000000000
+        String sortRam = "60000000000"
         Int UMILen = 12
         String featSTARSolo = "GeneFull"
         
@@ -354,7 +354,7 @@ task RunSTARSolo {
         Int numThreads
         Int UMILen
         String feat
-        Int sortRam
+        String sortRam
     }
     
     command <<<

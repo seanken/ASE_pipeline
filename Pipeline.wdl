@@ -104,7 +104,7 @@ workflow ASE_Pipeline {
     }
 
 
-    Directory fastq_path = select_first([MoveData.fastq_dir, ProcessInputBam.fastq_dir, ""])
+    String fastq_path = select_first([MoveData.fastq_dir, ProcessInputBam.fastq_dir, ""])
     
 
     # Get FASTQ paths
@@ -217,7 +217,7 @@ task MoveData {
     
     output {
         String localized_path = read_string("localized_path.txt")
-        Directory fastq_dir = "localized_data"
+        String fastq_dir = "localized_data"
     }
     
     runtime {
@@ -271,7 +271,7 @@ task ProcessInputBam {
     >>>
     
     output {
-        Directory fastq_dir = "FA_DS"
+        String fastq_dir = "FA_DS"
         String fastq_path = read_string("path.txt")
     }
     
@@ -346,7 +346,7 @@ task GetFastqPath {
 ##
 task RunSTARSolo {
     input {
-        Directory fastq_dirs
+        String fastq_dirs
         File vcf
         Int numCells
         File ref_dir

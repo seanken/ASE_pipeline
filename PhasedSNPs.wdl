@@ -24,6 +24,7 @@ workflow RunMonopogen {
             germline_vcf = germline_vcf,
             germline_vcf_index = germline_vcf_index,
             preprocess_output = MonopogenPreProcess.preprocess_output,
+            sample_name = sample_name
     }
 
     output {
@@ -68,6 +69,7 @@ task MonopogenGermline {
         File germline_vcf
         File germline_vcf_index
         File preprocess_output
+        String sample_name
         Int mem_gb = 80
         Int disk_gb = 100
         Int cpu = 1

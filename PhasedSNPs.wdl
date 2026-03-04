@@ -4,11 +4,11 @@ workflow RunMonopogen {
     input {
         File input_bam
         File input_bam_index
-        File ref_fasta
-        File ref_fasta_index
-        File germline_vcf
-        File germline_vcf_index
-        String sample_name
+        File ref_fasta="gs://ase-methods-dev-wb-sparkly-blueberry-3616/ref/geno_locations.vcf.gz"
+        File ref_fasta_index="gs://ase-methods-dev-wb-sparkly-blueberry-3616/ref/geno_locations.vcf.gz.tbi"
+        File germline_vcf="gs://ase-methods-dev-wb-sparkly-blueberry-3616/ref/genome.fa"
+        File germline_vcf_index="gs://ase-methods-dev-wb-sparkly-blueberry-3616/ref/genome.fa.fai"
+        String sample_name="Sample"
     }
 
     call MonopogenPreProcess {

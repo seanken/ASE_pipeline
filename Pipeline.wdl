@@ -24,6 +24,7 @@ workflow ASE_Pipeline {
         String? input_dir
         File? input_bam
         File? input_bam_bai=input_bam+".bai" ####Add way to assume bai is like bam but with .bai extension
+        String? gcs_project
         #String outdir ###Not sure used?
 
         
@@ -106,6 +107,7 @@ workflow ASE_Pipeline {
         call FindFastqsByPrefix {
             input:
                 input_dir = select_first([input_dir])
+                gcs_project=select_first([gcs_project])
         }
     }
 
@@ -202,6 +204,7 @@ task Error {
 task MoveData {
     input {
         String gcs_dirs  # comma-separated list of GCS paths
+        String gcs_project
     }
     
     command <<<
@@ -239,14 +242,15 @@ task MoveData {
 task FindFastqsByPrefix {
     input {
         String input_dir
+        String gcs_project
     }
 
     command <<<
         set -e
         mkdir -p localized_fastqs/R1 localized_fastqs/R2
 
-        gsutil ls "~{input_dir}*R1*fastq.gz" > r1_uris.txt
-        gsutil ls "~{input_dir}*R2*fastq.gz" > r2_uris.txt
+        gsutil -u "~{gcs_project}" ls "~{input_dir}*R1*fastq.gz" > r1_uris.txt
+        gsutil -u "~{gcs_project}" ls "~{input_dir}*R2*fastq.gz" > r2_uris.txt
 
         if [ ! -s r1_uris.txt ]; then
             echo "No R1 FASTQ files found for prefix: ~{input_dir}" >&2

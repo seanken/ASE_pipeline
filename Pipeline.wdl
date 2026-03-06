@@ -19,7 +19,9 @@ workflow ASE_Pipeline {
         # Required inputs
         File input_vcf
         String vcf_col
-        String? input_dirs  # comma-separated list
+        Array[File]? input_dirs_R1
+        Array[File]? input_dirs_R2
+        String? input_dir
         File? input_bam
         File? input_bam_bai=input_bam+".bai" ####Add way to assume bai is like bam but with .bai extension
         #String outdir ###Not sure used?
@@ -54,12 +56,16 @@ workflow ASE_Pipeline {
     }
     
     # Validate inputs
-    if (!defined(input_dirs) && !defined(input_bam)) {
-        call Error as Error_missing_input { input: msg = "Need to pass one of input_dirs or input_bam" }
+    if (!defined(input_dirs_R1) && !defined(input_dirs_R2) && !defined(input_dir) && !defined(input_bam)) {
+        call Error as Error_missing_input { input: msg = "Need to pass one of input_dirs_R1/input_dirs_R2, input_dir, or input_bam" }
     }
     
-    if (defined(input_dirs) && defined(input_bam)) {
-        call Error as Error_both_inputs { input: msg = "Can only pass one of input_dirs or input_bam" }
+    if ((defined(input_dirs_R1) || defined(input_dirs_R2) || defined(input_dir)) && defined(input_bam)) {
+        call Error as Error_both_inputs { input: msg = "Can only pass one of input FASTQ options (input_dirs_R1/input_dirs_R2 or input_dir) or input_bam" }
+    }
+
+    if (defined(input_dirs_R1) != defined(input_dirs_R2)) {
+        call Error as Error_unpaired_fastq_inputs { input: msg = "Need both input_dirs_R1 and input_dirs_R2" }
     }
     
     if (defined(cellFile) && !defined(input_bam)) {
@@ -95,17 +101,16 @@ workflow ASE_Pipeline {
                 bam = bam_to_use
         }
     }
-    
-    if(defined(input_dirs)) {
-        # Localize data from GCS
-        call MoveData {
+
+    if (defined(input_dir) && !defined(input_dirs_R1) && !defined(input_dirs_R2)) {
+        call FindFastqsByPrefix {
             input:
-                gcs_dirs = select_first([input_dirs])
+                input_dir = select_first([input_dir])
         }
     }
 
-
-    String fastq_path = select_first([MoveData.fastq_dir, ProcessInputBam.fastq_dir, ""])
+    Array[File] read1_fastqs = select_first([input_dirs_R1, FindFastqsByPrefix.read1_fastqs, ProcessInputBam.read1_fastqs, []])
+    Array[File] read2_fastqs = select_first([input_dirs_R2, FindFastqsByPrefix.read2_fastqs, ProcessInputBam.read2_fastqs, []])
     
 
     # Get FASTQ paths
@@ -117,7 +122,8 @@ workflow ASE_Pipeline {
     # Run STAR Solo
     call RunSTARSolo {
         input:
-            fastq_dirs = fastq_path,
+            read1_fastqs = read1_fastqs,
+            read2_fastqs = read2_fastqs,
             vcf = PrepVCF.new_vcf,
             numCells = numCells,
             ref_dir = ref_dir,
@@ -217,9 +223,57 @@ task MoveData {
     
     output {
         String localized_path = read_string("localized_path.txt")
-        String fastq_dir = "localized_data"
+        File fastq_dir = "localized_data"
     }
     
+    runtime {
+        memory: "16 GB"
+        cpu: 1
+        docker: "google/cloud-sdk:latest"
+    }
+}
+
+##
+##Finds and localizes FASTQ files in GCS from a shared prefix, then separates into R1/R2 arrays
+##
+task FindFastqsByPrefix {
+    input {
+        String input_dir
+    }
+
+    command <<<
+        set -e
+        mkdir -p localized_fastqs/R1 localized_fastqs/R2
+
+        gsutil ls "~{input_dir}*R1*fastq.gz" > r1_uris.txt
+        gsutil ls "~{input_dir}*R2*fastq.gz" > r2_uris.txt
+
+        if [ ! -s r1_uris.txt ]; then
+            echo "No R1 FASTQ files found for prefix: ~{input_dir}" >&2
+            exit 1
+        fi
+
+        if [ ! -s r2_uris.txt ]; then
+            echo "No R2 FASTQ files found for prefix: ~{input_dir}" >&2
+            exit 1
+        fi
+
+        r1_count=$(wc -l < r1_uris.txt)
+        r2_count=$(wc -l < r2_uris.txt)
+        if [ "$r1_count" -ne "$r2_count" ]; then
+            echo "Mismatched FASTQ counts for prefix: ~{input_dir} (R1=$r1_count, R2=$r2_count)" >&2
+            exit 1
+        fi
+
+        gsutil -m cp $(cat r1_uris.txt) localized_fastqs/R1/
+        gsutil -m cp $(cat r2_uris.txt) localized_fastqs/R2/
+    >>>
+
+    output {
+        Array[File] read1_fastqs = glob("localized_fastqs/R1/*")
+        Array[File] read2_fastqs = glob("localized_fastqs/R2/*")
+    }
+
     runtime {
         memory: "16 GB"
         cpu: 1
@@ -267,12 +321,12 @@ task ProcessInputBam {
     
     command <<<
         cellranger bamtofastq ~{bam} FA_DS
-        ls -d $PWD/FA_DS/s*/ | head -1 > path.txt
     >>>
     
     output {
-        String fastq_dir = "FA_DS"
-        String fastq_path = read_string("path.txt")
+        File fastq_dir = "FA_DS"
+        Array[File] read1_fastqs = glob("FA_DS/*/*_R1*fastq.gz")
+        Array[File] read2_fastqs = glob("FA_DS/*/*_R2*fastq.gz")
     }
     
     runtime {
@@ -346,7 +400,8 @@ task GetFastqPath {
 ##
 task RunSTARSolo {
     input {
-        String fastq_dirs
+        Array[File] read1_fastqs
+        Array[File] read2_fastqs
         File vcf
         Int numCells
         File ref_dir
@@ -358,17 +413,9 @@ task RunSTARSolo {
     }
     
     command <<<
-        toSearch=$(echo ~{fastq_dirs} | sed 's/,/*\/*_R2*fastq.gz /g' | sed 's/$/*\/*_R2*fastq.gz/g')
-        fastq1=$(ls -m $toSearch | tr -d '[:space:]')
-
-        toSearch=$(echo ~{fastq_dirs} | sed 's/,/*\/*_R1*fastq.gz /g' | sed 's/$/*\/*_R1*fastq.gz/g')
-        fastq2=$(ls -m $toSearch | tr -d '[:space:]')
-        
-        fastqs=$fastq1 $fastq2
-
         mkdir output
         STAR --genomeDir ~{ref_dir} \
-            --readFilesIn $fastqs \
+            --readFilesIn ~{sep=',' read1_fastqs} ~{sep=',' read2_fastqs} \
             --soloType CB_UMI_Simple \
             --soloCBwhitelist ~{whitelist} \
             --soloUMIlen ~{UMILen} \

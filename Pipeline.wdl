@@ -82,11 +82,11 @@ workflow ASE_Pipeline {
     
     # Get cells if specified #### Is select first needed? Can we remove due to if statement?
     if (defined(cellFile) && defined(input_bam) && defined(input_bam_bai) ) {
-        bai=select_first([input_bam_bai, (input_bam + ".bai")])
+        #bai=select_first([input_bam_bai, (input_bam + ".bai")])
         call GetCells {
             input:
                 bam = select_first([input_bam]),
-                bai = bai,
+                bai = select_first([input_bam_bai]),
                 cells = select_first([cellFile]),
                 splitBam = splitBam,
                 vcf_col = vcf_col

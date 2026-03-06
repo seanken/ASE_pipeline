@@ -93,10 +93,12 @@ workflow ASE_Pipeline {
         }
     }
     
-    File bam_to_use = select_first([GetCells.output_bam, input_bam])
+    
     
     # Process input BAM to FASTQ if needed
     if (defined(input_bam)) {
+        File bam_to_use = select_first([GetCells.output_bam, input_bam])
+        
         call ProcessInputBam {
             input:
                 bam = bam_to_use

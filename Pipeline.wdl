@@ -55,15 +55,15 @@ workflow ASE_Pipeline {
     
     # Validate inputs
     if (!defined(input_dirs) && !defined(input_bam)) {
-        call Error { input: msg = "Need to pass one of input_dirs or input_bam" }
+        call Error as Error_missing_input { input: msg = "Need to pass one of input_dirs or input_bam" }
     }
     
     if (defined(input_dirs) && defined(input_bam)) {
-        call Error { input: msg = "Can only pass one of input_dirs or input_bam" }
+        call Error as Error_both_inputs { input: msg = "Can only pass one of input_dirs or input_bam" }
     }
     
     if (defined(cellFile) && !defined(input_bam)) {
-        call Error { input: msg = "If cell file need bam file" }
+        call Error as Error_cellfile_without_bam { input: msg = "If cell file need bam file" }
     }
     
     # Prepare VCF
@@ -80,12 +80,13 @@ workflow ASE_Pipeline {
                 bam = select_first([input_bam]),
                 bai = select_first([input_bam_bai]),
                 cells = select_first([cellFile]),
+                splitBam = splitBam,
                 vcf_col = vcf_col,
                 numThreads = numThreads
         }
     }
     
-    File bam_to_use = select_first([GetCells.output_bam, input_bam, ""])
+    File bam_to_use = select_first([GetCells.output_bam, input_bam])
     
     # Process input BAM to FASTQ if needed
     if (defined(input_bam)) {
@@ -99,7 +100,7 @@ workflow ASE_Pipeline {
         # Localize data from GCS
         call MoveData {
             input:
-                gcs_dirs = input_dirs
+                gcs_dirs = select_first([input_dirs])
         }
     }
 
@@ -116,7 +117,7 @@ workflow ASE_Pipeline {
     # Run STAR Solo
     call RunSTARSolo {
         input:
-            fastqs = fastq_path,
+            fastq_dirs = fastq_path,
             vcf = PrepVCF.new_vcf,
             numCells = numCells,
             ref_dir = ref_dir,
@@ -169,7 +170,6 @@ workflow ASE_Pipeline {
     output {
         File gene_counts = CountAlleles.counts
         File snp_counts = CountAllelesSNP.counts
-        File? iso_counts = CountAllelesIso.counts
         File? qc_hist = PhasedUMI_QC.hist
         File? qc_basic = PhasedUMI_QC.basic_qc
         File? qc_umi = PhasedUMI_QC.umi_counts

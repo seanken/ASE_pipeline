@@ -23,7 +23,7 @@ workflow ASE_Pipeline {
         Array[File]? input_dirs_R2
         String? input_dir
         File? input_bam
-        File? input_bam_bai=input_bam+".bai" ####Add way to assume bai is like bam but with .bai extension
+        File? input_bam_bai ####Add way to assume bai is like bam but with .bai extension
         String? gcs_project
         #String outdir ###Not sure used?
 
@@ -82,10 +82,11 @@ workflow ASE_Pipeline {
     
     # Get cells if specified #### Is select first needed? Can we remove due to if statement?
     if (defined(cellFile) && defined(input_bam) && defined(input_bam_bai) ) {
+        bai=select_first([input_bam_bai, (input_bam + ".bai")])
         call GetCells {
             input:
                 bam = select_first([input_bam]),
-                bai = select_first([input_bam_bai]),
+                bai = bai,
                 cells = select_first([cellFile]),
                 splitBam = splitBam,
                 vcf_col = vcf_col

@@ -88,8 +88,7 @@ workflow ASE_Pipeline {
                 bai = select_first([input_bam_bai]),
                 cells = select_first([cellFile]),
                 splitBam = splitBam,
-                vcf_col = vcf_col,
-                numThreads = numThreads
+                vcf_col = vcf_col
         }
     }
     
@@ -115,12 +114,6 @@ workflow ASE_Pipeline {
     Array[File] read2_fastqs = select_first([input_dirs_R2, FindFastqsByPrefix.read2_fastqs, ProcessInputBam.read2_fastqs, []])
     
 
-    # Get FASTQ paths
-    #call GetFastqPath {
-    #    input:
-    #        directs = fastq_path
-    #}
-    
     # Run STAR Solo
     call RunSTARSolo {
         input:
@@ -198,45 +191,6 @@ task Error {
 }
 
 ##
-##Localizes data from Google Cloud Storage directories
-##To do: modify to handle multiple samples in a given directory
-##
-task MoveData {
-    input {
-        String gcs_dirs  # comma-separated list of GCS paths
-        String gcs_project
-    }
-    
-    command <<<
-        set -e
-        mkdir -p localized_data
-        
-        # Split comma-separated list and process each directory
-        IFS=',' read -ra DIRS <<< "~{gcs_dirs}"
-        for dir in "${DIRS[@]}"; do
-            # Trim whitespace
-            dir=$(echo "$dir" | xargs)
-            echo "Localizing: $dir"
-            gsutil -m cp -r "$dir" localized_data/
-        done
-        
-        # Output the path to localized data
-        echo "$PWD/localized_data" > localized_path.txt
-    >>>
-    
-    output {
-        String localized_path = read_string("localized_path.txt")
-        File fastq_dir = "localized_data"
-    }
-    
-    runtime {
-        memory: "16 GB"
-        cpu: 1
-        docker: "google/cloud-sdk:latest"
-    }
-}
-
-##
 ##Finds and localizes FASTQ files in GCS from a shared prefix, then separates into R1/R2 arrays
 ##
 task FindFastqsByPrefix {
@@ -296,7 +250,6 @@ task GetCells {
         File cells
         File splitBam
         String vcf_col
-        Int numThreads
     }
     
     command <<<
@@ -328,7 +281,6 @@ task ProcessInputBam {
     >>>
     
     output {
-        File fastq_dir = "FA_DS"
         Array[File] read1_fastqs = glob("FA_DS/*/*_R1*fastq.gz")
         Array[File] read2_fastqs = glob("FA_DS/*/*_R2*fastq.gz")
     }
@@ -366,36 +318,6 @@ task PrepVCF {
 }
 
 
-
-
-##
-##Gets paths to fastqs, legacy, not used in practice
-##
-task GetFastqPath {
-    input {
-        String directs
-    }
-    
-    command <<<
-        toSearch=$(echo ~{directs} | sed 's/,/*_R2*fastq.gz /g' | sed 's/$/*_R2*fastq.gz/g')
-        fastq1=$(ls -m $toSearch | tr -d '[:space:]')
-        
-        toSearch=$(echo ~{directs} | sed 's/,/*_R1*fastq.gz /g' | sed 's/$/*_R1*fastq.gz/g')
-        fastq2=$(ls -m $toSearch | tr -d '[:space:]')
-        
-        echo "$fastq1 $fastq2" > fastqs.txt
-    >>>
-    
-    output {
-        String fastqs = read_string("fastqs.txt")
-    }
-    
-    runtime {
-        memory: "2 GB"
-        docker: "ubuntu:20.04"
-        cpu: 1
-    }
-}
 
 
 ##

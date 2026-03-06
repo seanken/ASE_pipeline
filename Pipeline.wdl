@@ -106,8 +106,8 @@ workflow ASE_Pipeline {
     if (defined(input_dir) && !defined(input_dirs_R1) && !defined(input_dirs_R2)) {
         call FindFastqsByPrefix {
             input:
-                input_dir = select_first([input_dir])
-                gcs_project=select_first([gcs_project])
+                input_dir = select_first([input_dir]),
+                gcs_project = select_first([gcs_project])
         }
     }
 

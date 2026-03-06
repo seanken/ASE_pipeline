@@ -43,16 +43,16 @@ workflow ASE_Pipeline {
         String featSTARSolo = "GeneFull"
         
         # Reference files
-        File ref_dir="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/refs_moma/STAR_ref" 
-        File whitelist="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/refs_moma/whitelist_"+num10X_version+"/whitelist.txt"
-        File gtf="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/refs_moma/genes.gtf"
+        File ref_dir="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/STAR_ref" 
+        File whitelist="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/whitelist_"+num10X_version+"/whitelist.txt"
+        File gtf="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/genes.gtf"
 
         # Scripts used by the pipeline
-        File AlleleCountJar="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/scripts_pipe_moma/AlleleCount.jar"
-        File AlleleSNPCountJar="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/scripts_pipe_moma/AlleleCountSNP.jar"
-        File QCScript="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/scripts_pipe_moma/Phased.UMI.QC.R"
-        File makeBeds="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/scripts_pipe_moma/makeBeds.sh"
-        File splitBam="gs://fc-secure-b42fb9b0-04ed-4260-9c28-aa1274233114/scripts_pipe_moma/SplitFile.py" 
+        File AlleleCountJar="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/AlleleCount.jar"
+        File AlleleSNPCountJar="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/AlleleCountSNP.jar"
+        File QCScript="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/Phased.UMI.QC.R"
+        File makeBeds="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/makeBeds.sh"
+        File splitBam="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/SplitFile.py" 
         
     }
     

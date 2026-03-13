@@ -456,9 +456,9 @@ task SNPLevel {
     }
     
     runtime {
-        memory: "20 GB"
+        memory: "40 GB"
         cpu: 1
-        docker: "biocontainers/bedtools:v2.29.2-1-deb_cv1"
+        docker: "biocontainers/bedtools:v2.27.1dfsg-4-deb_cv1"
     }
 }
 

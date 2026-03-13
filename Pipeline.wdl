@@ -43,7 +43,7 @@ workflow ASE_Pipeline {
         String featSTARSolo = "GeneFull"
         
         # Reference files
-        File ref_dir="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/STAR_ref" 
+        String ref_dir="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/STAR_ref" 
         File whitelist="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/whitelist_"+num10X_version+"/whitelist.txt"
         File gtf="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/genes.gtf"
 
@@ -333,7 +333,7 @@ task RunSTARSolo {
         Array[File] read2_fastqs
         File vcf
         Int numCells
-        File ref_dir
+        String ref_dir
         File whitelist
         Int numThreads
         Int UMILen
@@ -343,7 +343,8 @@ task RunSTARSolo {
     
     command <<<
         mkdir output
-        STAR --genomeDir ~{ref_dir} \
+        gsutil cp -r ~{ref_dir} STAR_ref
+	STAR --genomeDir STAR_ref \
             --readFilesIn ~{sep=',' read1_fastqs} ~{sep=',' read2_fastqs} \
             --soloType CB_UMI_Simple \
             --soloCBwhitelist ~{whitelist} \

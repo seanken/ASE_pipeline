@@ -135,7 +135,7 @@ workflow ASE_Pipeline {
     # Count alleles at gene level
     call CountAlleles {
         input:
-            star_output = RunSTARSolo.output_dir,
+            star_output = RunSTARSolo.aligned_bam,
             jar = AlleleCountJar
     }
     
@@ -150,7 +150,7 @@ workflow ASE_Pipeline {
     # Count alleles at SNP level
     call CountAllelesSNP {
         input:
-            star_output = RunSTARSolo.output_dir,
+            star_output = RunSTARSolo.aligned_bam,
             jar = AlleleSNPCountJar
     }
     
@@ -343,7 +343,10 @@ task RunSTARSolo {
     
     command <<<
         mkdir output
-        gsutil cp -r ~{ref_dir} STAR_ref
+        echo "Downloading reference files..."
+        mkdir STAR_ref
+        gsutil cp -r ~{ref_dir}/* STAR_ref
+        echo "Running STAR Solo..."
 
         STAR --genomeDir STAR_ref \
             --readFilesIn ~{sep=',' read1_fastqs} ~{sep=',' read2_fastqs} \
@@ -367,10 +370,13 @@ task RunSTARSolo {
             --outFilterScoreMin 30 \
             --soloUMIdedup 1MM_CR \
             --clipAdapterType CellRanger4
+
+        tar -czvf output.tar.gz output
     >>>
     
     output {
-        File output_dir = "output"
+        File output_dir = "output.tar.gz"
+        File aligned_bam = "output/resultsAligned.sortedByCoord.out.bam"
     }
     
     runtime {
@@ -390,7 +396,7 @@ task CountAlleles {
     }
     
     command <<<
-        java -jar ~{jar} ~{star_output}/resultsAligned.sortedByCoord.out.bam counts.txt
+        java -jar ~{jar} ~{star_output}
     >>>
     
     output {
@@ -414,7 +420,7 @@ task CountAllelesSNP {
     }
     
     command <<<
-        java -jar ~{jar} ~{star_output}/resultsAligned.sortedByCoord.out.bam counts.txt
+        java -jar ~{jar} ~{star_output}
     >>>
     
     output {
@@ -469,7 +475,8 @@ task PhasedUMI_QC {
     }
     
     command <<<
-        Rscript ~{script} ~{counts} ~{star_output} ~{feat} ~{counts_snp}
+        tar -xf ~{star_output}
+        Rscript ~{script} ~{counts} output ~{feat} ~{counts_snp}
     >>>
     
     output {

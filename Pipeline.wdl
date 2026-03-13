@@ -19,8 +19,8 @@ workflow ASE_Pipeline {
         # Required inputs
         File input_vcf
         String vcf_col
-        Array[File]? input_dirs_R1
-        Array[File]? input_dirs_R2
+        Array[File] input_dirs_R1
+        Array[File] input_dirs_R2
         String? input_dir
         File? input_bam
         File? input_bam_bai ####Add way to assume bai is like bam but with .bai extension

@@ -344,7 +344,8 @@ task RunSTARSolo {
     command <<<
         mkdir output
         gsutil cp -r ~{ref_dir} STAR_ref
-	STAR --genomeDir STAR_ref \
+        
+	    STAR --genomeDir STAR_ref \
             --readFilesIn ~{sep=',' read1_fastqs} ~{sep=',' read2_fastqs} \
             --soloType CB_UMI_Simple \
             --soloCBwhitelist ~{whitelist} \

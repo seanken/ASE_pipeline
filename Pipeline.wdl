@@ -397,7 +397,7 @@ task CountAlleles {
     }
     
     command <<<
-        java -jar ~{jar} ~{star_output}
+        java -jar ~{jar} ~{star_output} counts.txt
     >>>
     
     output {
@@ -422,7 +422,7 @@ task CountAllelesSNP {
     }
     
     command <<<
-        java -jar ~{jar} ~{star_output}
+        java -jar ~{jar} ~{star_output} counts.txt
     >>>
     
     output {

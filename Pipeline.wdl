@@ -382,6 +382,7 @@ task RunSTARSolo {
     runtime {
         cpu: numThreads
         memory: "90 GB"
+        disks: "local-disk 100 HDD"
         docker: "cumulusprod/starsolo:2.7.10b"
     }
 }
@@ -406,6 +407,7 @@ task CountAlleles {
     runtime {
         memory: "40 GB"
         cpu: 1
+        disks: "local-disk 100 HDD"
         docker: "openjdk:11"
     }
 }
@@ -430,6 +432,7 @@ task CountAllelesSNP {
     runtime {
         memory: "40 GB"
         cpu: 1
+        disks: "local-disk 100 HDD"
         docker: "openjdk:11"
     }
 }

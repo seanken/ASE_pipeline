@@ -408,7 +408,7 @@ task CountAlleles {
         memory: "40 GB"
         cpu: 1
         disks: "local-disk 100 HDD"
-        docker: "openjdk:11"
+        docker: "openjdk:27-ea-oraclelinux9"
     }
 }
 
@@ -433,7 +433,7 @@ task CountAllelesSNP {
         memory: "40 GB"
         cpu: 1
         disks: "local-disk 100 HDD"
-        docker: "openjdk:11"
+        docker: "openjdk:27-ea-oraclelinux9"
     }
 }
 

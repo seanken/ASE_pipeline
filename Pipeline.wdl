@@ -19,8 +19,8 @@ workflow ASE_Pipeline {
         # Required inputs
         File input_vcf
         String vcf_col
-        Array[File] input_dirs_R1
-        Array[File] input_dirs_R2
+        Array[File]? input_dirs_R1
+        Array[File]? input_dirs_R2
         String? input_dir
         File? input_bam
         File? input_bam_bai ####Add way to assume bai is like bam but with .bai extension
@@ -29,7 +29,7 @@ workflow ASE_Pipeline {
 
         
         # Optional inputs
-        File? cellFile 
+        #File? cellFile  ##Removed for now, can add back in later if we want to do cell subsetting
         Boolean noQC = false
         
         # STAR parameters
@@ -69,9 +69,9 @@ workflow ASE_Pipeline {
         call Error as Error_unpaired_fastq_inputs { input: msg = "Need both input_dirs_R1 and input_dirs_R2" }
     }
     
-    if (defined(cellFile) && !defined(input_bam)) {
-        call Error as Error_cellfile_without_bam { input: msg = "If cell file need bam file" }
-    }
+    #if (defined(cellFile) && !defined(input_bam)) {
+    #    call Error as Error_cellfile_without_bam { input: msg = "If cell file need bam file" }
+    #}
     
     # Prepare VCF
     call PrepVCF {
@@ -81,23 +81,23 @@ workflow ASE_Pipeline {
     }
     
     # Get cells if specified #### Is select first needed? Can we remove due to if statement?
-    if (defined(cellFile) && defined(input_bam) && defined(input_bam_bai) ) {
-        #bai=select_first([input_bam_bai, (input_bam + ".bai")])
-        call GetCells {
-            input:
-                bam = select_first([input_bam]),
-                bai = select_first([input_bam_bai]),
-                cells = select_first([cellFile]),
-                splitBam = splitBam,
-                vcf_col = vcf_col
-        }
-    }
+    #if (defined(cellFile) && defined(input_bam) && defined(input_bam_bai) ) {
+    #    #bai=select_first([input_bam_bai, (input_bam + ".bai")])
+    #    call GetCells {
+    #        input:
+    #            bam = select_first([input_bam]),
+    #            bai = select_first([input_bam_bai]),
+    #            cells = select_first([cellFile]),
+    #            splitBam = splitBam,
+    #            vcf_col = vcf_col
+    #    }
+    #}
     
     
     
     # Process input BAM to FASTQ if needed
     if (defined(input_bam)) {
-        File bam_to_use = select_first([GetCells.output_bam, input_bam])
+        File bam_to_use = select_first([input_bam])
         
         call ProcessInputBam {
             input:

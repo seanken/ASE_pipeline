@@ -489,7 +489,8 @@ task PhasedUMI_QC {
     }
     
     runtime {
-        memory: "30 GB"
+        memory: "50 GB"
+        disks: "local-disk 100 HDD"
         cpu: 1
         docker: "rocker/tidyverse:4"
     }

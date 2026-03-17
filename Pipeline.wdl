@@ -291,6 +291,7 @@ task ProcessInputBam {
     runtime {
         memory: "32 GB"
         docker: "litd/docker-cellranger:v8.0.1"
+        disks: "local-disk 100 HDD"
         cpu: 4
     }
 }

@@ -157,8 +157,9 @@ task MonopogenPreProcess {
 
     command <<<
         path="/opt/Monopogen"
+        echo ~{input_bam} > bam_list.txt
         python3  ${path}/src/Monopogen.py preProcess \
-            -b ~{input_bam} \
+            -b bam_list.txt \
             -o res_preprocess \
             -a ${path}/apps \
             -t ~{cpu}

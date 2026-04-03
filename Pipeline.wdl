@@ -19,12 +19,12 @@ workflow ASE_Pipeline {
         # Required inputs
         File input_vcf
         String vcf_col
-        Array[File]? input_dirs_R1
-        Array[File]? input_dirs_R2
-        String? input_dir
-        File? input_bam
-        File? input_bam_bai ####Add way to assume bai is like bam but with .bai extension
-        String? gcs_project
+        Array[File] input_dirs_R1
+        Array[File] input_dirs_R2
+        #String? input_dir
+        #File? input_bam
+        #File? input_bam_bai ####Add way to assume bai is like bam but with .bai extension
+        #String? gcs_project
         #String outdir ###Not sure used?
 
         
@@ -57,12 +57,12 @@ workflow ASE_Pipeline {
     }
     
     # Validate inputs
-    if (!defined(input_dirs_R1) && !defined(input_dirs_R2) && !defined(input_dir) && !defined(input_bam)) {
-        call Error as Error_missing_input { input: msg = "Need to pass one of input_dirs_R1/input_dirs_R2, input_dir, or input_bam" }
+    if (!defined(input_dirs_R1) && !defined(input_dirs_R2) ) {
+        call Error as Error_missing_input { input: msg = "Need to pass input_dirs_R1/input_dirs_R2" }
     }
     
-    if ((defined(input_dirs_R1) || defined(input_dirs_R2) || defined(input_dir)) && defined(input_bam)) {
-        call Error as Error_both_inputs { input: msg = "Can only pass one of input FASTQ options (input_dirs_R1/input_dirs_R2 or input_dir) or input_bam" }
+    if ((defined(input_dirs_R1) || defined(input_dirs_R2)) && defined(input_bam)) {
+        call Error as Error_both_inputs { input: msg = "Can only pass one of input FASTQ options (input_dirs_R1/input_dirs_R2)" }
     }
 
     if (defined(input_dirs_R1) != defined(input_dirs_R2)) {
@@ -96,25 +96,25 @@ workflow ASE_Pipeline {
     
     
     # Process input BAM to FASTQ if needed
-    if (defined(input_bam)) {
-        File bam_to_use = select_first([input_bam])
-        
-        call ProcessInputBam {
-            input:
-                bam = bam_to_use
-        }
-    }
+    #if (defined(input_bam)) {
+    #    File bam_to_use = select_first([input_bam])
+    #    
+    #    call ProcessInputBam {
+    #        input:
+    #            bam = bam_to_use
+    #    }
+    #}
 
-    if (defined(input_dir) && !defined(input_dirs_R1) && !defined(input_dirs_R2)) {
-        call FindFastqsByPrefix {
-            input:
-                input_dir = select_first([input_dir]),
-                gcs_project = select_first([gcs_project])
-        }
-    }
+    #if (defined(input_dir) && !defined(input_dirs_R1) && !defined(input_dirs_R2)) {
+    #    call FindFastqsByPrefix {
+    #        input:
+    #            input_dir = select_first([input_dir]),
+    #            gcs_project = select_first([gcs_project])
+    #    }
+    #}
 
-    Array[File] read1_fastqs = select_first([input_dirs_R1, FindFastqsByPrefix.read1_fastqs, ProcessInputBam.read1_fastqs, []])
-    Array[File] read2_fastqs = select_first([input_dirs_R2, FindFastqsByPrefix.read2_fastqs, ProcessInputBam.read2_fastqs, []])
+    Array[File] read1_fastqs = select_first([input_dirs_R1, []])
+    Array[File] read2_fastqs = select_first([input_dirs_R2, []])
     
 
     # Run STAR Solo
@@ -195,6 +195,7 @@ task Error {
 
 ##
 ##Finds and localizes FASTQ files in GCS from a shared prefix, then separates into R1/R2 arrays
+##Not currently working, need to fix
 ##
 task FindFastqsByPrefix {
     input {
@@ -273,6 +274,7 @@ task GetCells {
 
 ##
 ##Transforms an input BAM into FASTQ files using cellranger bamtofastq
+##Not currently working, need to fix
 ##
 task ProcessInputBam {
     input {

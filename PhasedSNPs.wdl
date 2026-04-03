@@ -2,8 +2,8 @@ version 1.0
 
 workflow RunMonopogen {
     input {
-        File? input_bam
-        File? input_bam_index
+        File input_bam
+        File input_bam_index
         Array[File]? input_fastqs
         File? cellranger_reference_tar_gz
         File ref_fasta="gs://ase-methods-dev-wb-sparkly-blueberry-3616/ref/geno_locations.vcf.gz"
@@ -138,7 +138,7 @@ task RunCellRanger {
     }
 
     runtime {
-        docker: "10xgenomics/cellranger:latest"
+        docker: "nfcore/cellranger:7.0.0"
         memory: "~{mem_gb} GB"
         disks: "local-disk ~{disk_gb} SSD"
         cpu: cpu

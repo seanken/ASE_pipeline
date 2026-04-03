@@ -201,10 +201,11 @@ task MonopogenGermline {
             -o out \
             -a ${path}/apps \
             -t ~{cpu}
+        tar -czvf germline_output.tar.gz out
     >>>
 
     output {
-        File germline_output = "out"
+        File germline_output = "germline_output.tar.gz"
     }
 
     runtime {

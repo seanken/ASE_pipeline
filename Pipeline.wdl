@@ -44,16 +44,9 @@ workflow ASE_Pipeline {
         
         # Reference files
         String ref_dir="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/STAR_ref" 
-        File whitelist="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/whitelist_"+num10X_version+"/whitelist.txt"
+        File? whitelist
         File gtf="gs://ase-methods-dev-wb-sparkly-blueberry-3616/refs_moma/genes.gtf"
 
-        # Scripts used by the pipeline
-        File AlleleCountJar="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/AlleleCount.jar"
-        File AlleleSNPCountJar="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/AlleleCountSNP.jar"
-        File QCScript="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/Phased.UMI.QC.R"
-        File makeBeds="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/makeBeds.sh"
-        File splitBam="gs://ase-methods-dev-wb-sparkly-blueberry-3616/scripts_pipe_moma/SplitFile.py" 
-        
     }
     
     # Validate inputs
@@ -78,6 +71,11 @@ workflow ASE_Pipeline {
         input:
             vcf = input_vcf,
             vcf_col = vcf_col
+    }
+
+    call GetFromGit{
+        input:
+            num10X_version = num10X_version
     }
     
     # Get cells if specified #### Is select first needed? Can we remove due to if statement?
@@ -125,7 +123,7 @@ workflow ASE_Pipeline {
             vcf = PrepVCF.new_vcf,
             numCells = numCells,
             ref_dir = ref_dir,
-            whitelist = whitelist,
+            whitelist = select_first([whitelist, GetFromGit.whitelist]),
             numThreads = numThreads,
             UMILen = UMILen,
             feat = featSTARSolo,
@@ -136,7 +134,7 @@ workflow ASE_Pipeline {
     call CountAlleles {
         input:
             star_output = RunSTARSolo.aligned_bam,
-            jar = AlleleCountJar
+            jar = GetFromGit.allele_count_jar
     }
     
     # SNP level processing
@@ -144,14 +142,14 @@ workflow ASE_Pipeline {
         input:
             gtf = gtf,
             vcf = PrepVCF.new_vcf,
-            makeBeds = makeBeds
+            makeBeds = GetFromGit.make_beds
     }
     
     # Count alleles at SNP level
     call CountAllelesSNP {
         input:
             star_output = RunSTARSolo.aligned_bam,
-            jar = AlleleSNPCountJar
+            jar = GetFromGit.allele_snp_count_jar
     }
     
     # Isoform analysis if requested
@@ -162,7 +160,7 @@ workflow ASE_Pipeline {
     if (!noQC) {
         call PhasedUMI_QC {
             input:
-                script = QCScript,
+                script = GetFromGit.qc_script,
                 counts = CountAlleles.counts,
                 star_output = RunSTARSolo.output_dir,
                 feat = featSTARSolo,
@@ -190,6 +188,35 @@ task Error {
     }
     runtime {
         docker: "ubuntu:20.04"
+    }
+}
+
+##
+##Clones pipeline scripts from GitHub and returns file references
+##
+task GetFromGit {
+    input {
+        String num10X_version
+    }
+
+    command <<<
+        git clone https://github.com/seanken/ASE_pipeline/ repo
+        gunzip repo/ref/whitelist_~{num10X_version}/whitelist.txt.gz
+    >>>
+
+    output {
+        File allele_count_jar     = "repo/scripts_pipe_moma/AlleleCount.jar"
+        File allele_snp_count_jar = "repo/scripts_pipe_moma/AlleleCountSNP.jar"
+        File qc_script            = "repo/scripts_pipe_moma/Phased.UMI.QC.R"
+        File make_beds            = "repo/scripts_pipe_moma/makeBeds.sh"
+        File split_bam            = "repo/scripts_pipe_moma/SplitFile.py"
+        File whitelist            = "repo/ref/whitelist_" + num10X_version + "/whitelist.txt"
+    }
+
+    runtime {
+        docker: "alpine/git:latest"
+        memory: "4 GB"
+        cpu: 1
     }
 }
 

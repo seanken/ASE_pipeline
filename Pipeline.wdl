@@ -54,7 +54,7 @@ workflow ASE_Pipeline {
         call Error as Error_missing_input { input: msg = "Need to pass input_dirs_R1/input_dirs_R2" }
     }
     
-    if ((defined(input_dirs_R1) || defined(input_dirs_R2)) && defined(input_bam)) {
+    if ((defined(input_dirs_R1) || defined(input_dirs_R2))) {
         call Error as Error_both_inputs { input: msg = "Can only pass one of input FASTQ options (input_dirs_R1/input_dirs_R2)" }
     }
 

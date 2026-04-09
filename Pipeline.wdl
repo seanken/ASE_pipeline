@@ -191,6 +191,7 @@ task Error {
 
 ##
 ##Clones pipeline scripts from GitHub and returns file references
+##Needs to be updated to have a docker image with git already installed
 ##
 task GetFromGit {
     input {
@@ -198,8 +199,10 @@ task GetFromGit {
     }
 
     command <<<
+        apt-get update
+        apt-get install git -y
         git clone https://github.com/seanken/ASE_pipeline/ repo
-        gunzip repo/ref/whitelist_~{num10X_version}/whitelist.txt.gz
+        gunzip -f repo/ref/whitelist_~{num10X_version}/whitelist.txt.gz
     >>>
 
     output {
@@ -212,8 +215,8 @@ task GetFromGit {
     }
 
     runtime {
-        docker: "alpine/git:latest"
-        memory: "4 GB"
+        docker: "ubuntu:latest"
+        memory: "14 GB"
         cpu: 1
     }
 }
@@ -377,7 +380,7 @@ task RunSTARSolo {
         echo "Running STAR Solo..."
 
         STAR --genomeDir STAR_ref \
-            --readFilesIn ~{sep=',' read1_fastqs} ~{sep=',' read2_fastqs} \
+            --readFilesIn ~{sep=',' read2_fastqs} ~{sep=',' read1_fastqs} \
             --soloType CB_UMI_Simple \
             --soloCBwhitelist ~{whitelist} \
             --soloUMIlen ~{UMILen} \
